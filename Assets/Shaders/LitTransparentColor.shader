@@ -1,4 +1,4 @@
-Shader "MyShaders/VertexLitColor"
+Shader "MyShaders/LitTransparentColor"
 {
     Properties
     {
@@ -6,7 +6,10 @@ Shader "MyShaders/VertexLitColor"
     }
     SubShader
     {
-        Tags { "RenderType"="Opaque" "LightMode"="ForwardBase" }
+        Tags { "RenderType"="Transparent" "Queue"="Transparent" "LightMode"="ForwardBase" }
+        Blend SrcAlpha OneMinusSrcAlpha
+        Cull Back
+        ZWrite Off
         Pass
         {
             CGPROGRAM
@@ -26,7 +29,7 @@ Shader "MyShaders/VertexLitColor"
             struct Interpolators
             {
                 float4 position : SV_POSITION;
-                float diffuse : TEXCOORD0;
+                float3 normal : TEXCOORD0;
                 float4 ambient : TEXCOORD1;
             };
 
@@ -34,15 +37,14 @@ Shader "MyShaders/VertexLitColor"
             {
                 Interpolators i;
                 i.position = UnityObjectToClipPos(v.vertex);
-                float3 worldNormal = UnityObjectToWorldNormal(v.normal);
-                i.diffuse = DotClamped(worldNormal, _WorldSpaceLightPos0.xyz);
-                i.ambient = float4(max(0, ShadeSH9(float4(v.normal, 1))), 1);
+                i.normal = UnityObjectToWorldNormal(v.normal);
+                i.ambient = float4(max(0, ShadeSH9(float4(i.normal, 1))), 1);
                 return i;
             }
 
             fixed4 frag (Interpolators i) : SV_Target
             {
-                return _Color * i.diffuse * _LightColor0 + i.ambient;
+                return fixed4(_Color.xyz + _LightColor0.xyz * DotClamped(i.normal, _WorldSpaceLightPos0.xyz) + i.ambient, _Color.a);
             }
             ENDCG
         }

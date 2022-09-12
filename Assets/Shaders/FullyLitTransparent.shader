@@ -1,4 +1,4 @@
-Shader "MyShaders/FullyLitColor"
+Shader "MyShaders/FullyLitTransparentColor"
 {
     Properties
     {
@@ -6,7 +6,10 @@ Shader "MyShaders/FullyLitColor"
     }
     SubShader
     {
-        Tags { "RenderType"="Opaque" "LightMode"="ForwardBase" }
+        Tags { "RenderType"="Transparent" "Queue"="Transparent" "LightMode"="ForwardBase"}
+        Blend SrcAlpha OneMinusSrcAlpha
+        Cull Back
+        ZWrite Off
         Pass
         {
             CGPROGRAM
@@ -41,14 +44,13 @@ Shader "MyShaders/FullyLitColor"
 
             fixed4 frag (Interpolators i) : SV_Target
             {
-                return _Color * DotClamped(i.normal, _WorldSpaceLightPos0.xyz) * _LightColor0 + i.ambient;
+                return fixed4(_Color.xyz + _LightColor0.xyz * DotClamped(i.normal, _WorldSpaceLightPos0.xyz) + i.ambient, _Color.a);
             }
             ENDCG
         }
         
-        Tags { "LightMode"="ForwardAdd" }
+        Tags { "LightMode"="ForwardAdd"}
         Blend One One
-        ZWrite Off
         Pass
         {
             CGPROGRAM
@@ -79,8 +81,8 @@ Shader "MyShaders/FullyLitColor"
             {
                 Interpolators i;
                 i.position = UnityObjectToClipPos(v.vertex);
-                i.worldPos = mul(unity_ObjectToWorld, v.vertex);
                 i.normal = UnityObjectToWorldNormal(v.normal);
+                i.worldPos = mul(unity_ObjectToWorld, v.vertex);
                 return i;
             }
 
@@ -88,14 +90,13 @@ Shader "MyShaders/FullyLitColor"
             {
                 float3 lightDir;
                 UNITY_LIGHT_ATTENUATION(attenuation, 0, i.worldPos);
+            #if defined(POINT) || defined(POINT_COOKIE) || defined(SPOT)
+                lightDir = normalize(_WorldSpaceLightPos0.xyz - i.worldPos);
+            #else
+                lightDir = _WorldSpaceLightPos0.xyz;
+            #endif
                 
-                #if defined(POINT) || defined(POINT_COOKIE) || defined(SPOT)
-                    lightDir = normalize(_WorldSpaceLightPos0.xyz - i.worldPos);
-                #else
-                    lightDir = _WorldSpaceLightPos0.xyz;
-                #endif
-                
-                return _Color * DotClamped(i.normal, lightDir) * _LightColor0 * attenuation;
+                return fixed4(_Color.xyz + _LightColor0.xyz, _Color.a) * attenuation * DotClamped(i.normal, lightDir);
             }
             ENDCG
         }
