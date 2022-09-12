@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: FullyLitTransparentColor
-  m_Shader: {fileID: 4800000, guid: 8746c3e55791a2a46abbea35fa4fa86a, type: 3}
+  m_Name: ToonShader
+  m_Shader: {fileID: 4800000, guid: 70d4ed5ae28ca984e8f9f6cbe065b11b, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -72,12 +72,18 @@ Material:
     - _Mode: 0
     - _OcclusionStrength: 1
     - _Parallax: 0.02
+    - _SemiShadow: 0.4
+    - _Shadow: 0.1
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _UVSec: 0
     - _ZWrite: 1
     m_Colors:
-    - _Color: {r: 0.8235294, g: 1, b: 0, a: 0.19607843}
+    - _Color: {r: 0.8235294, g: 1, b: 0, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+    - _SemiShadow: {r: 0, g: 0, b: 0, a: 1}
+    - _SemiShadowColor: {r: 0.4176667, g: 0.6226415, b: 0.1262905, a: 1}
+    - _Shadow: {r: 0, g: 0, b: 0, a: 1}
+    - _ShadowColor: {r: 0.16023806, g: 0.2924528, b: 0.11725702, a: 1}
   m_BuildTextureStacks: []

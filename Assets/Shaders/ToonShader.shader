@@ -1,15 +1,16 @@
-Shader "MyShaders/FullyLitTransparentColor"
+Shader "MyShaders/ToonShader"
 {
     Properties
     {
         _Color ("Color", Color) = (0, 0, 0, 1)
+        _SemiShadow ("Semi shadow threshold", Range(0.001, 1)) = 0.4
+        _SemiShadowColor ("Semi shadow color", Color) = (0, 0, 0, 1)
+        _Shadow ("Shadow threshold", Range(0.001, 1)) = 0.7
+        _ShadowColor ("Shadow color", Color) = (0, 0, 0, 1)
     }
     SubShader
     {
-        Tags { "RenderType"="Transparent" "Queue"="Transparent" "LightMode"="ForwardBase" }
-        Blend SrcAlpha OneMinusSrcAlpha
-        Cull Back
-        ZWrite Off
+        Tags { "RenderType"="Opaque" "LightMode"="ForwardBase" }
         Pass
         {
             CGPROGRAM
@@ -19,6 +20,10 @@ Shader "MyShaders/FullyLitTransparentColor"
             #include "UnityStandardBRDF.cginc"
 
             uniform float4 _Color;
+            uniform float _SemiShadow;
+            uniform float4 _SemiShadowColor;
+            uniform float _Shadow;
+            uniform float4 _ShadowColor;
             
             struct VertexData
             {
@@ -44,12 +49,14 @@ Shader "MyShaders/FullyLitTransparentColor"
 
             fixed4 frag (Interpolators i) : SV_Target
             {
-                return fixed4(_Color.xyz + _LightColor0.xyz * DotClamped(i.normal, _WorldSpaceLightPos0.xyz) + i.ambient, _Color.a);
+                float diffuse = DotClamped(i.normal, _WorldSpaceLightPos0.xyz);
+                float4 color = diffuse < _SemiShadow ? (diffuse < _Shadow ? _ShadowColor : _SemiShadowColor) : _Color;
+                return color * _LightColor0 + i.ambient;
             }
             ENDCG
         }
         
-        Tags { "LightMode"="ForwardAdd"}
+        Tags { "LightMode"="ForwardAdd" }
         Blend One One
         Pass
         {
@@ -63,6 +70,10 @@ Shader "MyShaders/FullyLitTransparentColor"
             #include "AutoLight.cginc"
 
             uniform float4 _Color;
+            uniform float _SemiShadow;
+            uniform float4 _SemiShadowColor;
+            uniform float _Shadow;
+            uniform float4 _ShadowColor;
             
             struct VertexData
             {
@@ -91,13 +102,15 @@ Shader "MyShaders/FullyLitTransparentColor"
                 float3 lightDir;
                 UNITY_LIGHT_ATTENUATION(attenuation, 0, i.worldPos);
                 
-            #if defined(POINT) || defined(POINT_COOKIE) || defined(SPOT)
-                lightDir = normalize(_WorldSpaceLightPos0.xyz - i.worldPos);
-            #else
-                lightDir = _WorldSpaceLightPos0.xyz;
-            #endif
                 
-                return fixed4(_Color.xyz + _LightColor0.xyz, _Color.a) * attenuation * DotClamped(i.normal, lightDir);
+            #if defined(POINT) || defined(POINT_COOKIE) || defined(SPOT)
+                lightDir = _WorldSpaceLightPos0.xyz - i.worldPos;
+            #else
+                discard; // Do not allow more additional directional lights
+            #endif
+            
+                float diffuse = DotClamped(i.normal, lightDir);
+                return _Color * diffuse * _LightColor0 * attenuation;
             }
             ENDCG
         }
