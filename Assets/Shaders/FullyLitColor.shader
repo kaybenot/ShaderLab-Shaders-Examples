@@ -52,8 +52,11 @@ Shader "MyShaders/FullyLitColor"
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
+            
+            #pragma multi_compile_fwdadd
 
             #include "UnityStandardBRDF.cginc"
+            #include "AutoLight.cginc"
 
             uniform float4 _Color;
             
@@ -81,8 +84,16 @@ Shader "MyShaders/FullyLitColor"
 
             fixed4 frag (Interpolators i) : SV_Target
             {
-                float3 lightDir = normalize(_WorldSpaceLightPos0.xyz - i.worldPos);
-                return _Color * DotClamped(i.normal, lightDir) * _LightColor0;
+                float3 lightDir;
+                UNITY_LIGHT_ATTENUATION(attenuation, 0, i.worldPos);
+                
+                #if defined(POINT) || defined(POINT_COOKIE) || defined(SPOT)
+                    lightDir = normalize(_WorldSpaceLightPos0.xyz - i.worldPos);
+                #else
+                    lightDir = _WorldSpaceLightPos0.xyz;
+                #endif
+                
+                return _Color * DotClamped(i.normal, lightDir) * _LightColor0 * attenuation;
             }
             ENDCG
         }
