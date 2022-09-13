@@ -106,6 +106,7 @@ Shader "MyShaders/ToonShader"
             #if defined(POINT) || defined(POINT_COOKIE) || defined(SPOT)
                 lightDir = _WorldSpaceLightPos0.xyz - i.worldPos;
             #else
+                lightDir = 0;
                 discard; // Do not allow more additional directional lights
             #endif
             
