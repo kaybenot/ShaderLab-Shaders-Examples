@@ -1,6 +1,8 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 [ExecuteAlways]
 public class GrassSpawner : MonoBehaviour
@@ -15,6 +17,9 @@ public class GrassSpawner : MonoBehaviour
     private void Start()
     {
         terrain = GetComponent<Terrain>();
+
+        while (transform.childCount > 0)
+            DestroyImmediate(transform.GetChild(0).gameObject);
 
         Vector3 pos = terrain.transform.position;
         for (float x = pos.x + Step; x < terrain.terrainData.bounds.max.x + pos.x; x += Step)
