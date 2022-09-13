@@ -3,8 +3,6 @@ Shader "MyShaders/ToonShader"
     Properties
     {
         _Color ("Color", Color) = (0, 0, 0, 1)
-        _SemiShadow ("Semi shadow threshold", Range(0.001, 1)) = 0.4
-        _SemiShadowColor ("Semi shadow color", Color) = (0, 0, 0, 1)
         _Shadow ("Shadow threshold", Range(0.001, 1)) = 0.7
         _ShadowColor ("Shadow color", Color) = (0, 0, 0, 1)
     }
@@ -16,12 +14,13 @@ Shader "MyShaders/ToonShader"
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
+            
+            #pragma multi_compile_fwdbase
 
             #include "UnityStandardBRDF.cginc"
+            #include "AutoLight.cginc"
 
             uniform float4 _Color;
-            uniform float _SemiShadow;
-            uniform float4 _SemiShadowColor;
             uniform float _Shadow;
             uniform float4 _ShadowColor;
             
@@ -33,24 +32,27 @@ Shader "MyShaders/ToonShader"
             
             struct Interpolators
             {
-                float4 position : SV_POSITION;
+                float4 pos : SV_POSITION;
                 float3 normal : TEXCOORD0;
                 float4 ambient : TEXCOORD1;
+                SHADOW_COORDS(2)
             };
 
             Interpolators vert (VertexData v)
             {
                 Interpolators i;
-                i.position = UnityObjectToClipPos(v.vertex);
+                i.pos = UnityObjectToClipPos(v.vertex);
                 i.normal = UnityObjectToWorldNormal(v.normal);
                 i.ambient = float4(max(0, ShadeSH9(float4(i.normal, 1))), 1);
+                TRANSFER_SHADOW(i)
                 return i;
             }
 
             fixed4 frag (Interpolators i) : SV_Target
             {
+                half shadow = SHADOW_ATTENUATION(i);
                 float diffuse = DotClamped(i.normal, _WorldSpaceLightPos0.xyz);
-                float4 color = diffuse < _SemiShadow ? (diffuse < _Shadow ? _ShadowColor : _SemiShadowColor) : _Color;
+                float4 color = diffuse * shadow < _Shadow ? _ShadowColor : _Color;
                 return color * _LightColor0 + i.ambient;
             }
             ENDCG
@@ -70,8 +72,6 @@ Shader "MyShaders/ToonShader"
             #include "AutoLight.cginc"
 
             uniform float4 _Color;
-            uniform float _SemiShadow;
-            uniform float4 _SemiShadowColor;
             uniform float _Shadow;
             uniform float4 _ShadowColor;
             
@@ -106,12 +106,34 @@ Shader "MyShaders/ToonShader"
             #if defined(POINT) || defined(POINT_COOKIE) || defined(SPOT)
                 lightDir = _WorldSpaceLightPos0.xyz - i.worldPos;
             #else
-                lightDir = 0;
-                discard; // Do not allow more additional directional lights
+                return 1;
             #endif
             
                 float diffuse = DotClamped(i.normal, lightDir);
                 return _Color * diffuse * _LightColor0 * attenuation;
+            }
+            ENDCG
+        }
+        
+        Tags { "LightMode"="ShadowCaster" }
+        Pass
+        {
+            CGPROGRAM
+            #pragma vertex vert
+            #pragma fragment frag
+            
+            #pragma multi_compile_shadowcaster
+
+            #include "UnityStandardBRDF.cginc"
+
+            float4 vert (float4 v : POSITION) : SV_POSITION
+            {
+                return UnityObjectToClipPos(v);
+            }
+
+            fixed4 frag (float4 pos : SV_POSITION) : SV_Target
+            {
+                return 0;
             }
             ENDCG
         }

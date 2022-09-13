@@ -73,17 +73,17 @@ Material:
     - _OcclusionStrength: 1
     - _Parallax: 0.02
     - _SemiShadow: 0.4
-    - _Shadow: 0.1
+    - _Shadow: 0.001
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _UVSec: 0
     - _ZWrite: 1
     m_Colors:
-    - _Color: {r: 0.8235294, g: 1, b: 0, a: 1}
+    - _Color: {r: 0.37356222, g: 0.6603774, b: 0.13394447, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SemiShadow: {r: 0, g: 0, b: 0, a: 1}
-    - _SemiShadowColor: {r: 0.4176667, g: 0.6226415, b: 0.1262905, a: 1}
+    - _SemiShadowColor: {r: 0.21331719, g: 0.4811321, b: 0.14751692, a: 1}
     - _Shadow: {r: 0, g: 0, b: 0, a: 1}
-    - _ShadowColor: {r: 0.16023806, g: 0.2924528, b: 0.11725702, a: 1}
+    - _ShadowColor: {r: 0.09011215, g: 0.23584908, b: 0.1260476, a: 1}
   m_BuildTextureStacks: []
